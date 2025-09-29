@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DuckDB-Wasm File Upload</title>
-    <link rel="stylesheet" href="/assets/styles.css">
-    <script type="module" src="/assets/scripts.js" defer></script> 
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./scripts.js" defer></script>
 </head>
 <body>
 
@@ -13,8 +13,10 @@
         <div class="left-column">
             <h1>Vanilla🍦Duck🦆</h1>
             
-            <input type="file" id="fileInput" accept=".csv,.parquet,.json"/>
-
+            <input type="file" id="fileInput" accept=".csv,.parquet,.json,.tsv,.txt,.arrow,.db,.sqlite,.feather,.orc,.avro,.xls,.xlsx,.gz,.bz2,.zip,.tar,.7z,.lz4,.zst,.hdf5,.h5,.bin,.xml,.geojson,.shp,.dbf,.kml,.gml,.topojson,.ndjson,.log,.ts,.psv,.fwf,.rds,.rdata,.sav,.dta,.sas7bdat,.xpt,.mat,.h5ad,.loom,.mtx,.mtx.gz,.rda,.rds,.rdata,.jsonl,.parquet,.arrow,.orc,.avro,.feather,.xls,.xlsx,.db,.sqlite,.tsv,.txt,.csv,.gz,.bz2,.zip,.tar,.7z,.lz4,.zst,.hdf5,.h5,.bin,.xml,.geojson,.shp,.dbf,.kml,.gml,.topojson,.ndjson,.log,.ts,.psv,.fwf"/>
+            <label for="fileUrlInput" style="font-weight:bold;display:block;margin-top:10px;">Or paste HTTP file link:</label>
+            <input type="text" id="fileUrlInput" placeholder="Paste HTTP file URL here" style="width:100%;font-size:1.2em;padding:8px;margin-bottom:10px;"/>
+            <input type="text" id="extensionInput" placeholder="Extension name (e.g. h3, icu, quack)"/>
             <div id="createTableDiv">
                 <input type="text" id="tableNameInput" placeholder="Enter table name"/>
                 <button type="button" id="uploadBtn" onclick="uploadTable()">Create Table</button>

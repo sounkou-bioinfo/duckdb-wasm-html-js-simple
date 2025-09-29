@@ -37,37 +37,55 @@ async function initDuckDB() {
 async function uploadTable() {
   try {
     const fileInput = document.getElementById("fileInput");
+    const fileUrlInput = document.getElementById("fileUrlInput");
     const file = fileInput.files ? fileInput.files[0] : null;
+    let arrayBuffer, fileName;
 
-    if (!file) {
-      alert("Please select a file first.");
+    if (file) {
+      arrayBuffer = await file.arrayBuffer();
+      fileName = file.name;
+    } else if (fileUrlInput && fileUrlInput.value) {
+      const response = await fetch(fileUrlInput.value);
+      arrayBuffer = await response.arrayBuffer();
+      fileName = fileUrlInput.value.split("/").pop() || "remote_file";
+    } else {
+      alert("Please select a file or enter a file URL.");
       return;
     }
 
     const tableNameInput = document.getElementById("tableNameInput");
     const tableName = tableNameInput.value;
-
     if (!tableName) {
       alert("Please enter a valid table name.");
       return;
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-
     if (!db) {
       console.error("DuckDB-Wasm is not initialized");
       return;
     }
-    console.log("File loaded:", file.name);
+    console.log("File loaded:", fileName);
 
     const conn = await db.connect();
     console.log("Database connection established");
 
-    const fileType = file.name.split(".").pop()?.toLowerCase() || "";
+    // Extension install/load (if specified)
+    const extensionInput = document.getElementById("extensionInput");
+    if (extensionInput && extensionInput.value.trim()) {
+      const extName = extensionInput.value.trim();
+      try {
+        await conn.query(`INSTALL ${extName} FROM 'https://community-extensions.duckdb.org';`);
+        await conn.query(`LOAD ${extName};`);
+        console.log(`Extension ${extName} installed and loaded.`);
+      } catch (error) {
+        console.error("Error installing/loading extension:", error);
+      }
+    }
+
+    const fileType = fileName.split(".").pop()?.toLowerCase() || "";
 
     if (fileType === "csv" || fileType === "parquet" || fileType === "json") {
-      // Register the file in DuckDB's virtual file system
-      const virtualFileName = `/${file.name}`;
+      const virtualFileName = `/${fileName}`;
       await db.registerFileBuffer(virtualFileName, new Uint8Array(arrayBuffer));
 
       let query = "";
@@ -84,6 +102,7 @@ async function uploadTable() {
     } else {
       console.log("Invalid file type: ", fileType);
     }
+    await conn.close();
   } catch (error) {
     console.error("Error processing file or querying data:", error);
   }
