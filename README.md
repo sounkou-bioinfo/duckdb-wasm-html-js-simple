@@ -19,7 +19,7 @@ server(static_dir = static_dir)
 
 - Serves files from `inst/static` in the current directory at `127.0.0.1:8081/static/`
 - Automatically creates `mtcars.csv` in `inst/static` and deletes it on exit
-- Supports range requests and CORS
+- goserveR supports range requests and CORS
 
 ## Example
 
