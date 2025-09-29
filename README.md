@@ -12,7 +12,9 @@ remotes::install_github("sounkou-bioinfo/duckdb-wasm-html-js-simple")
 
 ```r
 library(duckdbWasmHtmlJsSimple)
-server()
+library(goserveR)
+static_dir <- system.file("static", package = "duckdbWasmHtmlJsSimple")
+server(static_dir = static_dir)
 ```
 
 - Serves files from `inst/static` in the current directory at `127.0.0.1:8081/static/`
