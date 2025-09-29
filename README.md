@@ -5,7 +5,7 @@ A fork to distribute the DuckDB-Wasm HTML/JS demo as an R package, serving stati
 ## Installation
 
 ```r
-remotes::install_github("sounkou-bioinfo/duckdb-wasm-html-js-simple", ref = "rServe")
+remotes::install_github("sounkou-bioinfo/duckdb-wasm-html-js-simple")
 ```
 
 ## Demo: Run the Server
