@@ -1,13 +1,10 @@
 Package: duckdbWasmHtmlJsSimple
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person(given = "Sounkou Mahamane", family = "Toure", 
-    email = "sounkoutoure@gmail.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: 
-Imports:
-    goserveR
+Type: Package
+Title: Serve Static Files for DuckDB-Wasm via Go HTTP Server
+Version: 0.1.0.9000
+Authors@R: person("Sounkou", "Toure", email = "sounkou.bioinfo@gmail.com", role = c("aut", "cre"))
+Description: Minimal package to serve static files (including CSVs) for DuckDB-Wasm web apps using Go HTTP server via goserveR. Automatically creates mtcars.csv in inst/static and deletes it on exit. Supports range requests and CORS.
+License: MIT
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+LazyData: true
+Imports: goserveR
