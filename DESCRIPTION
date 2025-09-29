@@ -10,4 +10,4 @@ LazyData: true
 Imports: goserveR
 RoxygenNote: 7.3.2
 Remotes:
-    sounkoutoure/goserveR
+    sounkou-bioinfo/goserveR
