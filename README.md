@@ -1,6 +1,6 @@
 # duckdb-wasm-html-js-simple
 
-A fork to distribute the DuckDB-Wasm HTML/JS demo as an R package, serving static files via Go HTTP server (goserveR). We shall use this setup along with plumber2/Shiny/Ambiorix to build interactive web apps with DuckDB-Wasm and serve authenticated static files uri. This can be used as a poorman's MotherDuck i.e doing some computation on the server side and finishing it off on the client side with DuckDB-Wasm (serilizing server computation with plumber2 nanoparquet serializer or make your own serializer).
+A fork to distribute the DuckDB-Wasm HTML/JS demo as an R package, serving static files via Go HTTP server (goserveR). We shall use this setup along with plumber2/Shiny/Ambiorix to build interactive web apps with DuckDB-Wasm and serve authenticated static files uri. This can be used as a poorman's MotherDuck i.e doing some computation on the server side and finishing it off on the client side with DuckDB-Wasm (serializing server computation with plumber2 nanoparquet serializer or make your own serializer).
 
 ## Installation
 
