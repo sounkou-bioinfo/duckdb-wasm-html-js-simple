@@ -40,14 +40,16 @@ async function uploadTable() {
     const fileUrlInput = document.getElementById("fileUrlInput");
     const file = fileInput.files ? fileInput.files[0] : null;
     let arrayBuffer, fileName;
+    let isRemote = false;
 
     if (file) {
       arrayBuffer = await file.arrayBuffer();
       fileName = file.name;
     } else if (fileUrlInput && fileUrlInput.value) {
-      const response = await fetch(fileUrlInput.value);
-      arrayBuffer = await response.arrayBuffer();
-      fileName = fileUrlInput.value.split("/").pop() || "remote_file";
+      // For remote URLs, delegate reading to DuckDB via httpfs instead of fetching here
+      isRemote = true;
+      // strip query string if present when deriving a filename
+      fileName = (fileUrlInput.value.split("/").pop() || "remote_file").split("?")[0];
     } else {
       alert("Please select a file or enter a file URL.");
       return;
@@ -69,7 +71,7 @@ async function uploadTable() {
     const conn = await db.connect();
     console.log("Database connection established");
 
-    // Extension install/load (if specified)
+    // Extension install/load (if specified by user)
     const extensionInput = document.getElementById("extensionInput");
     if (extensionInput && extensionInput.value.trim()) {
       const extName = extensionInput.value.trim();
@@ -82,19 +84,42 @@ async function uploadTable() {
       }
     }
 
+    // If the source is a remote URL, ensure httpfs is available so DuckDB can read directly from the URL
+    if (isRemote) {
+      try {
+        // INSTALL may fail if already installed; ignore install error
+        await conn.query(`INSTALL httpfs FROM 'https://community-extensions.duckdb.org';`);
+      } catch (e) {
+        console.warn('httpfs install may have failed or already installed:', e);
+      }
+      try {
+        await conn.query(`LOAD httpfs;`);
+        console.log('httpfs loaded to allow DuckDB to read remote URLs');
+      } catch (e) {
+        console.error('Error loading httpfs extension:', e);
+      }
+    }
+
     const fileType = fileName.split(".").pop()?.toLowerCase() || "";
 
-    if (fileType === "csv" || fileType === "parquet" || fileType === "json") {
-      const virtualFileName = `/${fileName}`;
-      await db.registerFileBuffer(virtualFileName, new Uint8Array(arrayBuffer));
+    // For remote files, delegate to DuckDB by using the HTTP URL directly in the read_* call.
+    // For local uploads, register the buffer in the virtual FS and read from the virtual path.
+    let sourcePath;
+    if (isRemote) {
+      sourcePath = fileUrlInput.value;
+    } else {
+      sourcePath = `/${fileName}`;
+      await db.registerFileBuffer(sourcePath, new Uint8Array(arrayBuffer));
+    }
 
+    if (fileType === "csv" || fileType === "parquet" || fileType === "json") {
       let query = "";
       if (fileType === "csv") {
-        query = `CREATE TABLE '${tableName}' AS FROM read_csv_auto('${virtualFileName}', header = true)`;
+        query = `CREATE TABLE '${tableName}' AS FROM read_csv_auto('${sourcePath}', header = true)`;
       } else if (fileType === "parquet") {
-        query = `CREATE TABLE '${tableName}' AS FROM read_parquet('${virtualFileName}')`;
+        query = `CREATE TABLE '${tableName}' AS FROM read_parquet('${sourcePath}')`;
       } else if (fileType === "json") {
-        query = `CREATE TABLE '${tableName}' AS FROM read_json_auto('${virtualFileName}')`;
+        query = `CREATE TABLE '${tableName}' AS FROM read_json_auto('${sourcePath}')`;
       }
 
       await conn.query(query);
