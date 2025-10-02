@@ -9,6 +9,5 @@ Encoding: UTF-8
 LazyData: true
 Imports: goserveR
 RoxygenNote: 7.3.2
-OS_type: unix
 Remotes:
     sounkou-bioinfo/goserveR
