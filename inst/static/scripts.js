@@ -263,6 +263,7 @@ async function runQuery() {
 
 // Add a function to load/install extensions without creating a table
 async function loadExtension() {
+  let conn;
   try {
     const extensionInput = document.getElementById("extensionInput");
     const extName = extensionInput && extensionInput.value ? extensionInput.value.trim() : "";
@@ -277,28 +278,66 @@ async function loadExtension() {
       return;
     }
 
-    const conn = await db.connect();
-    try {
-      // Try installing from community extensions (may already be present)
-      await conn.query(`INSTALL ${extName} FROM 'https://community-extensions.duckdb.org';`);
-      console.log(`Extension ${extName} installed.`);
-    } catch (installErr) {
-      console.warn(`Install may have failed or extension already present: ${installErr}`);
-    }
+    conn = await db.connect();
+    console.log(`Attempting to LOAD extension '${extName}' (may be built-in or autoloadable)...`);
 
+    // 1) Try LOAD first (covers built-in or already installed extensions)
     try {
       await conn.query(`LOAD ${extName};`);
-      console.log(`Extension ${extName} loaded.`);
+      console.log(`Extension ${extName} loaded via LOAD.`);
       alert(`Extension ${extName} loaded successfully.`);
+      return;
     } catch (loadErr) {
-      console.error(`Error loading extension ${extName}:`, loadErr);
-      alert(`Error loading extension ${extName}: ${loadErr}`);
+      console.warn(`LOAD failed for ${extName}, will attempt INSTALL from core/community:`, loadErr);
     }
 
-    await conn.close();
+    // 2) Try installing from core repository (https://extensions.duckdb.org)
+    try {
+      console.log(`Trying INSTALL ${extName} FROM 'https://extensions.duckdb.org'`);
+      await conn.query(`INSTALL ${extName} FROM 'https://extensions.duckdb.org';`);
+      console.log(`Installed ${extName} from core repo.`);
+      await conn.query(`LOAD ${extName};`);
+      console.log(`Loaded ${extName} after core install.`);
+      alert(`Extension ${extName} installed (core) and loaded successfully.`);
+      return;
+    } catch (coreErr) {
+      console.warn(`Core install/load failed for ${extName}:`, coreErr);
+    }
+
+    // 3) Try installing from community repository (https://community-extensions.duckdb.org)
+    try {
+      console.log(`Trying INSTALL ${extName} FROM 'https://community-extensions.duckdb.org'`);
+      await conn.query(`INSTALL ${extName} FROM 'https://community-extensions.duckdb.org';`);
+      console.log(`Installed ${extName} from community repo.`);
+      await conn.query(`LOAD ${extName};`);
+      console.log(`Loaded ${extName} after community install.`);
+      alert(`Extension ${extName} installed (community) and loaded successfully.`);
+      return;
+    } catch (commErr) {
+      console.warn(`Community install/load failed for ${extName}:`, commErr);
+    }
+
+    // 4) Fallback: try INSTALL without repository (uses defaults or aliases)
+    try {
+      console.log(`Trying INSTALL ${extName} without explicit repo`);
+      await conn.query(`INSTALL ${extName};`);
+      await conn.query(`LOAD ${extName};`);
+      console.log(`Installed and loaded ${extName} with fallback INSTALL.`);
+      alert(`Extension ${extName} installed and loaded (fallback).`);
+      return;
+    } catch (fallbackErr) {
+      console.error(`All attempts failed to install/load extension ${extName}:`, fallbackErr);
+      alert(`Failed to install/load extension ${extName}. See console for details.`);
+    }
   } catch (err) {
     console.error("Unexpected error in loadExtension:", err);
     alert(`Unexpected error: ${err}`);
+  } finally {
+    try {
+      if (conn) await conn.close();
+    } catch (closeErr) {
+      console.warn('Error closing connection after loadExtension:', closeErr);
+    }
   }
 }
 
