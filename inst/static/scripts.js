@@ -261,10 +261,52 @@ async function runQuery() {
   }
 }
 
+// Add a function to load/install extensions without creating a table
+async function loadExtension() {
+  try {
+    const extensionInput = document.getElementById("extensionInput");
+    const extName = extensionInput && extensionInput.value ? extensionInput.value.trim() : "";
+    if (!extName) {
+      alert("Please enter an extension name to load (e.g. httpfs, h3, icu).");
+      return;
+    }
+
+    if (!db) {
+      console.error("DuckDB-Wasm is not initialized");
+      alert("DuckDB not initialized yet. Please wait a moment and try again.");
+      return;
+    }
+
+    const conn = await db.connect();
+    try {
+      // Try installing from community extensions (may already be present)
+      await conn.query(`INSTALL ${extName} FROM 'https://community-extensions.duckdb.org';`);
+      console.log(`Extension ${extName} installed.`);
+    } catch (installErr) {
+      console.warn(`Install may have failed or extension already present: ${installErr}`);
+    }
+
+    try {
+      await conn.query(`LOAD ${extName};`);
+      console.log(`Extension ${extName} loaded.`);
+      alert(`Extension ${extName} loaded successfully.`);
+    } catch (loadErr) {
+      console.error(`Error loading extension ${extName}:`, loadErr);
+      alert(`Error loading extension ${extName}: ${loadErr}`);
+    }
+
+    await conn.close();
+  } catch (err) {
+    console.error("Unexpected error in loadExtension:", err);
+    alert(`Unexpected error: ${err}`);
+  }
+}
+
 // Initialize DuckDB on page load
 document.addEventListener("DOMContentLoaded", () => {
   initDuckDB();
 
   window.uploadTable = uploadTable;
   window.runQuery = runQuery;
+  window.loadExtension = loadExtension;
 });
