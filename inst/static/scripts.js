@@ -29,6 +29,16 @@ async function initDuckDB() {
     // revoke the object url now no longer needed
     URL.revokeObjectURL(worker_url);
     console.log("DuckDB-Wasm initialized successfully.");
+
+    // Ensure the SQL query interface is visible on page load even if there are no tables yet
+    try {
+      const queryEntryDiv = document.getElementById("queryEntryDiv");
+      if (queryEntryDiv) queryEntryDiv.style.display = "block";
+      const queryResultsDiv = document.getElementById("queryResultsDiv");
+      if (queryResultsDiv) queryResultsDiv.style.display = "block";
+    } catch (e) {
+      console.warn("Could not update UI visibility after DB init:", e);
+    }
   } catch (error) {
     console.error("Error initializing DuckDB-Wasm:", error);
   }
@@ -143,7 +153,7 @@ async function updateTableList() {
 
     const conn = await db.connect();
     console.log("Database connection established");
-    const query = `SELECT table_name as TABLES FROM information_schema.tables WHERE table_schema = 'main';;`;
+    const query = `SELECT table_name as TABLES FROM information_schema.tables WHERE table_schema = 'main';`;
     const showTables = await conn.query(query);
 
     const rowCount = showTables.numRows;
@@ -151,16 +161,18 @@ async function updateTableList() {
     const queryEntryDiv = document.getElementById("queryEntryDiv");
     console.log("rowCount: ", rowCount);
 
+    // Always keep the SQL query entry visible so users can run queries at any time.
     if (rowCount === 0) {
-      tablesDiv.style.display = "none";
-      queryEntryDiv.style.display = "none";
+      if (tablesDiv) tablesDiv.style.display = "none";
+      if (queryEntryDiv) queryEntryDiv.style.display = "block";
     } else {
-      tablesDiv.style.display = "block";
-      queryEntryDiv.style.display = "block";
+      if (tablesDiv) tablesDiv.style.display = "block";
+      if (queryEntryDiv) queryEntryDiv.style.display = "block";
       arrowToHtmlTable(showTables, "tablesTable");
-      await conn.close();
-      console.log("Database connection closed");
     }
+
+    await conn.close();
+    console.log("Database connection closed");
   } catch (error) {
     console.error("Error processing file or querying data:", error);
   }
@@ -232,7 +244,7 @@ async function runQuery() {
 
     const result = await conn.query(query);
     arrowToHtmlTable(result, "resultTable");
-    updateTableList();
+    await updateTableList();
     queryResultsDiv.style.display = "block";
     resultTable.style.display = "block";
     resultErrorDiv.style.display = "none";
