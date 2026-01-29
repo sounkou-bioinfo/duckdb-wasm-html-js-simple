@@ -1,14 +1,12 @@
 #!/usr/bin/env Rscript
 
-# Load the package and run the API
-devtools::load_all()
 library(duckdbWasmHtmlJsSimple)
 library(goserveR)
 library(ambiorix)
 
 static_dir <- file.path(getwd(), "inst/static")
 go_server_prefix <- "/static"
-go_server_port <- 8081
+go_server_port <- 8000
 ambiorix_port <- 8080
 ambiorix_static_prefix <- "/static"
 csv_path <- file.path(static_dir, "mtcars.csv")
@@ -24,20 +22,32 @@ on.exit(
     },
     add = TRUE
 )
-
-goserveR::runServer(
-    addr = paste0("127.0.0.1:", go_server_port), dir = static_dir, prefix = go_server_prefix,
+go_addr <- paste0("127.0.0.1:", go_server_port)
+go_server <- goserveR::runServer(
+    addr = go_addr, dir = static_dir, prefix = go_server_prefix,
     blocking = FALSE
 )
 Sys.sleep(5)
 get_static <- function(req, res) {
     res$status <- 302L
     # redirect to go server static files
-    res$redirect(path = paste0("http://127.0.0.1:", go_server_port, , "/static"))
+    print(req)
+    res$redirect(path = paste0("http://", go_addr, req$PATH_INFO))
+}
+get_static_file <- function(req, res) {
+    # param
+    file <- req$params$filepath
+    res$status <- 302L
+    # redirect to go server static files
+    message("looking for file: ", file)
+    res$redirect(path = paste0("http://", go_addr, go_server_prefix, "/", file))
 }
 
 app <- Ambiorix$new()
-
+router <- Router$new("/static")
 app$get("/static", get_static)
-
+app$get("/static/:filepath", get_static_file)
+app$get("/", function(req, res) {
+    res$send("Home!")
+})
 app$start(port = ambiorix_port)
