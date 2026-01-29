@@ -10,7 +10,14 @@ server <- function(static_dir = file.path(getwd(), "inst/static"),
                    prefix = "/static") {
     if (!dir.exists(static_dir)) dir.create(static_dir, recursive = TRUE)
     csv_path <- file.path(static_dir, "mtcars.csv")
+    message("Writing mtcars.csv to ", csv_path)
     write.csv(mtcars, csv_path, row.names = FALSE)
+    # if nanoparquet is installed, write a parquet file too
+    if (requireNamespace("nanoparquet", quietly = TRUE)) {
+        pq_path <- file.path(static_dir, "mtcars.parquet")
+        message("Writing mtcars.parquet to ", pq_path)
+        nanoparquet::write_parquet(mtcars, pq_path)
+    }
     on.exit(
         {
             if (file.exists(csv_path)) file.remove(csv_path)

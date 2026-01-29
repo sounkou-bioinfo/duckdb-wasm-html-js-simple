@@ -8,6 +8,7 @@ License: MIT
 Encoding: UTF-8
 LazyData: true
 Imports: goserveR
+Suggests: nanoparquet, ambiorix
 RoxygenNote: 7.3.2
 Remotes:
     sounkou-bioinfo/goserveR
