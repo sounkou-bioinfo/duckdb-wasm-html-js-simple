@@ -29,7 +29,7 @@ go_server <- goserveR::runServer(
 )
 Sys.sleep(5)
 get_static <- function(req, res) {
-    res$status <- 302L
+    res$status <- 304L
     # redirect to go server static files
     print(req)
     res$redirect(path = paste0("http://", go_addr, req$PATH_INFO))
@@ -37,7 +37,7 @@ get_static <- function(req, res) {
 get_static_file <- function(req, res) {
     # param
     file <- req$params$filepath
-    res$status <- 302L
+    res$status <- 304L
     # redirect to go server static files
     message("looking for file: ", file)
     res$redirect(path = paste0("http://", go_addr, go_server_prefix, "/", file))
